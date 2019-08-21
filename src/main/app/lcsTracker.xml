@@ -42,6 +42,17 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
         <set-payload value="{&#xD;&#xA;&#x9;&quot;teamId&quot;: 1,&#xD;&#xA;&#x9;&quot;teamTag&quot;:&quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;&#x9;&quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;&#x9;&quot;wins&quot;:10,&#xD;&#xA;&#x9;&quot;losses&quot;:7&#xD;&#xA;}" doc:name="Set Payload"/>
     </flow>
     <flow name="post:/teams/{teamId}/players:application/json:lcsTracker-config">
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <foreach doc:name="For Each">
+            <db:insert config-ref="MySQL_Configuration" doc:name="Database">
+                <db:parameterized-query><![CDATA[INSERT INTO players(ign,team,tag,igrole) VALUES(#[payload['ign']], #[payload['team']], #[payload['teamTag']], #[payload['role']]);]]></db:parameterized-query>
+            </db:insert>
+        </foreach>
         <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
         <set-payload value="[&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;playerId&quot;: 1,&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;&#x9;&quot;teamTag&quot;: &quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;Team Solo Mid&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;top&quot;&#xD;&#xA;},&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;playerId&quot;: 2,&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;Doublelift&quot;,&#xD;&#xA;&#x9;&quot;teamTag&quot;: &quot;TL&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;Team Liquid&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;adc&quot;&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
     </flow>
@@ -52,9 +63,7 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
 ---
 payload]]></dw:set-payload>
         </dw:transform-message>
-        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
         <foreach collection="#[payload]" doc:name="For Each">
-            <logger message="#[payload]" level="INFO" doc:name="Logger"/>
             <db:insert config-ref="MySQL_Configuration" doc:name="Database">
                 <db:parameterized-query><![CDATA[INSERT INTO teams(team,tag,region,wins,losses) VALUES(#[payload['team']], #[payload['teamTag']], #[payload['region']], #[payload['wins']], #[payload['losses']]);]]></db:parameterized-query>
             </db:insert>
