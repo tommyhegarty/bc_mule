@@ -1,7 +1,6 @@
 [
 {
-  "teamId": 1,
-  "teamTag":"TSM",
+  "tag":"TSM",
   "team":"Team Solo Mid",
   "region":"NA",
   "wins":10,
@@ -9,8 +8,7 @@
 }
 ,
 {
-  "teamId": 2,
-  "teamTag": "G2",
+  "tag": "G2",
   "team": "G2 Esports",
   "region": "EU",
   "wins": 13,

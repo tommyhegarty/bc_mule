@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
-http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
     <http:listener-config name="lcsTracker-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
     <apikit:config name="lcsTracker-config" raml="lcsTracker.raml" consoleEnabled="false" doc:name="Router"/>
+    <db:mysql-config name="MySQL_Configuration" host="192.168.99.100" port="3306" user="basic" password="lowpass" database="lcstracker" doc:name="MySQL Configuration"/>
     <flow name="lcsTracker-main">
         <http:listener config-ref="lcsTracker-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
         <apikit:router config-ref="lcsTracker-config" doc:name="APIkit Router"/>
@@ -14,37 +17,59 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
         <http:listener config-ref="lcsTracker-httpListenerConfig" path="/console/*" doc:name="HTTP"/>
         <apikit:console config-ref="lcsTracker-config" doc:name="APIkit Console"/>
     </flow>
-    <flow name="put:/teams/{teamId}/players/{playerId}:application/json:lcsTracker-config">
-        <set-payload value="{&#xD;&#xA;  &quot;playerId&quot;: 1,&#xD;&#xA;  &quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;  &quot;teamTag&quot;: &quot;TSM&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;Team Solo Mid&quot;,&#xD;&#xA;  &quot;role&quot;: &quot;top&quot;&#xD;&#xA;}" doc:name="Set Payload"/>
+    <flow name="put:/teams/{tag}/players/{ign}:application/json:lcsTracker-config">
+        <set-payload value="{&#xD;&#xA;  &quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;TSM&quot;,&#xD;&#xA;  &quot;role&quot;: &quot;top&quot;&#xD;&#xA;}" doc:name="Set Payload"/>
     </flow>
-    <flow name="put:/teams/{teamId}:application/json:lcsTracker-config">
-        <set-payload value="{&#xD;&#xA;&#x9;&quot;teamId&quot;: 1,&#xD;&#xA;&#x9;&quot;teamTag&quot;:&quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;&#x9;&quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;&#x9;&quot;wins&quot;:10,&#xD;&#xA;&#x9;&quot;losses&quot;:7&#xD;&#xA;}" doc:name="Set Payload"/>
+    <flow name="put:/teams/{tag}:application/json:lcsTracker-config">
+        <set-payload value="{&#xD;&#xA;&#x9;&quot;tag&quot;:&quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;&#x9;&quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;&#x9;&quot;wins&quot;:10,&#xD;&#xA;&#x9;&quot;losses&quot;:7&#xD;&#xA;}" doc:name="Set Payload"/>
     </flow>
-    <flow name="delete:/teams/{teamId}/players/{playerId}:lcsTracker-config">
+    <flow name="delete:/teams/{tag}/players/{ign}:lcsTracker-config">
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
     </flow>
-    <flow name="delete:/teams/{teamId}:lcsTracker-config">
+    <flow name="delete:/teams/{tag}:lcsTracker-config">
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
     </flow>
-    <flow name="get:/teams/{teamId}/players:lcsTracker-config">
-        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;playerId&quot;: 1,&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;&#x9;&quot;teamTag&quot;: &quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;Team Solo Mid&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;top&quot;&#xD;&#xA;},&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;playerId&quot;: 2,&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;Doublelift&quot;,&#xD;&#xA;&#x9;&quot;teamTag&quot;: &quot;TL&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;Team Liquid&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;adc&quot;&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
+    <flow name="get:/teams/{tag}/players:lcsTracker-config">
+        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;top&quot;&#xD;&#xA;},&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;Doublelift&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;TL&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;adc&quot;&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
     </flow>
     <flow name="get:/teams:lcsTracker-config">
-        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;  &quot;teamId&quot;: 1,&#xD;&#xA;  &quot;teamTag&quot;:&quot;TSM&quot;,&#xD;&#xA;  &quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;  &quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;  &quot;wins&quot;:10,&#xD;&#xA;  &quot;losses&quot;:7&#xD;&#xA;}&#xD;&#xA;,&#xD;&#xA;{&#xD;&#xA;  &quot;teamId&quot;: 2,&#xD;&#xA;  &quot;teamTag&quot;: &quot;G2&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;G2 Esports&quot;,&#xD;&#xA;  &quot;region&quot;: &quot;EU&quot;,&#xD;&#xA;  &quot;wins&quot;: 13,&#xD;&#xA;  &quot;losses&quot;: 2&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
+        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;  &quot;tag&quot;:&quot;TSM&quot;,&#xD;&#xA;  &quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;  &quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;  &quot;wins&quot;:10,&#xD;&#xA;  &quot;losses&quot;:7&#xD;&#xA;}&#xD;&#xA;,&#xD;&#xA;{&#xD;&#xA;  &quot;tag&quot;: &quot;G2&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;G2 Esports&quot;,&#xD;&#xA;  &quot;region&quot;: &quot;EU&quot;,&#xD;&#xA;  &quot;wins&quot;: 13,&#xD;&#xA;  &quot;losses&quot;: 2&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
     </flow>
-    <flow name="get:/teams/{teamId}/players/{playerId}:lcsTracker-config">
-        <set-payload value="{&#xD;&#xA;  &quot;playerId&quot;: 1,&#xD;&#xA;  &quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;  &quot;teamTag&quot;: &quot;TSM&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;Team Solo Mid&quot;,&#xD;&#xA;  &quot;role&quot;: &quot;top&quot;&#xD;&#xA;}" doc:name="Set Payload"/>
+    <flow name="get:/teams/{tag}/players/{ign}:lcsTracker-config">
+        <set-payload value="{&#xD;&#xA;  &quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;TSM&quot;,&#xD;&#xA;  &quot;role&quot;: &quot;top&quot;&#xD;&#xA;}" doc:name="Set Payload"/>
     </flow>
-    <flow name="get:/teams/{teamId}:lcsTracker-config">
-        <set-payload value="{&#xD;&#xA;&#x9;&quot;teamId&quot;: 1,&#xD;&#xA;&#x9;&quot;teamTag&quot;:&quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;&#x9;&quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;&#x9;&quot;wins&quot;:10,&#xD;&#xA;&#x9;&quot;losses&quot;:7&#xD;&#xA;}" doc:name="Set Payload"/>
+    <flow name="get:/teams/{tag}:lcsTracker-config">
+        <set-payload value="{&#xD;&#xA;&#x9;&quot;tag&quot;:&quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;&#x9;&quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;&#x9;&quot;wins&quot;:10,&#xD;&#xA;&#x9;&quot;losses&quot;:7&#xD;&#xA;}" doc:name="Set Payload"/>
     </flow>
-    <flow name="post:/teams/{teamId}/players:application/json:lcsTracker-config">
+    <flow name="post:/teams/{tag}/players:application/json:lcsTracker-config">
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <foreach doc:name="For Each">
+            <db:insert config-ref="MySQL_Configuration" doc:name="Database">
+                <db:parameterized-query><![CDATA[INSERT INTO players(ign, igrole, team) VALUES(#[payload['ign']],#[payload['role']],#[message.inboundProperties.'http.uri.params'.tag]);]]></db:parameterized-query>
+            </db:insert>
+        </foreach>
         <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;playerId&quot;: 1,&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;&#x9;&quot;teamTag&quot;: &quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;Team Solo Mid&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;top&quot;&#xD;&#xA;},&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;playerId&quot;: 2,&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;Doublelift&quot;,&#xD;&#xA;&#x9;&quot;teamTag&quot;: &quot;TL&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;Team Liquid&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;adc&quot;&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
+        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;top&quot;&#xD;&#xA;},&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;Doublelift&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;TL&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;adc&quot;&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
     </flow>
     <flow name="post:/teams:application/json:lcsTracker-config">
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <foreach doc:name="For Each">
+            <db:insert config-ref="MySQL_Configuration" doc:name="Database">
+                <db:parameterized-query><![CDATA[INSERT INTO teams(team, tag, region, wins, losses) VALUES(#[payload['team']],#[payload['tag']],#[payload['region']],#[payload['wins']],#[payload['losses']]);]]></db:parameterized-query>
+            </db:insert>
+        </foreach>
         <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;  &quot;teamId&quot;: 1,&#xD;&#xA;  &quot;teamTag&quot;:&quot;TSM&quot;,&#xD;&#xA;  &quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;  &quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;  &quot;wins&quot;:10,&#xD;&#xA;  &quot;losses&quot;:7&#xD;&#xA;}&#xD;&#xA;,&#xD;&#xA;{&#xD;&#xA;  &quot;teamId&quot;: 2,&#xD;&#xA;  &quot;teamTag&quot;: &quot;G2&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;G2 Esports&quot;,&#xD;&#xA;  &quot;region&quot;: &quot;EU&quot;,&#xD;&#xA;  &quot;wins&quot;: 13,&#xD;&#xA;  &quot;losses&quot;: 2&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
+        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;  &quot;tag&quot;:&quot;TSM&quot;,&#xD;&#xA;  &quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;  &quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;  &quot;wins&quot;:10,&#xD;&#xA;  &quot;losses&quot;:7&#xD;&#xA;}&#xD;&#xA;,&#xD;&#xA;{&#xD;&#xA;  &quot;tag&quot;: &quot;G2&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;G2 Esports&quot;,&#xD;&#xA;  &quot;region&quot;: &quot;EU&quot;,&#xD;&#xA;  &quot;wins&quot;: 13,&#xD;&#xA;  &quot;losses&quot;: 2&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
     </flow>
     <apikit:mapping-exception-strategy name="lcsTracker-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">

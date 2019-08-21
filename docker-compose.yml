@@ -1,0 +1,14 @@
+version: '3'
+services:
+  sql-db:
+    container_name: sql_boot
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_DATABASE: lcstracker
+      MYSQL_USER: basic
+      MYSQL_PASSWORD: lowpass
+    build:
+      context: .
+      dockerfile: create-tables.dockerfile
