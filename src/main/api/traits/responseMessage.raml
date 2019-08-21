@@ -1,0 +1,12 @@
+#%RAML 1.0 Trait
+usage: Add to all API resources that have error handling
+responses:
+  400:
+  401:
+  403:
+  404:
+  500:
+    description: Implements the MuleSoft Internal Error Handling Module
+    body:
+      application/json:
+        type: !include ../types/errorStructure.raml

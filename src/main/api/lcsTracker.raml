@@ -1,0 +1,131 @@
+#%RAML 1.0
+title: lcsTracker
+baseUri: https://basicurl.com/{version}
+version: v1
+
+types:
+  typeTeam: !include types/typeTeam.raml
+  typePlayer: !include types/typePlayer.raml
+  
+traits:
+  hasError: !include traits/responseMessage.raml
+
+securitySchemes:
+  basic: !include security/basic.raml
+
+securedBy: [basic]
+
+/teams:
+  is: [hasError]
+  description: "collection of all active professional teams"
+  post:
+    description: "adds new teams to the active database"
+    body:
+      application/json:
+        type: typeTeam[]
+        example: !include examples/teamArray.json
+    responses:
+      201:
+        body:
+          application/json:
+            type: typeTeam[]
+            example: !include examples/teamArray.json
+
+  get:
+    description: "get list of teams from given region"
+    queryParameters:
+      region:
+        type: string
+        required: false
+        minLength: 2
+        maxLength: 3
+    responses:
+      200:
+        body:
+          application/json:
+            type: typeTeam[]
+            example: !include examples/teamArray.json
+  /{teamId}:
+    uriParameters:
+      teamId:
+        type: integer
+    get:
+      description: "get the team info for the team id"
+      responses:
+        200:
+          body:
+            application/json:
+              type: typeTeam
+              example: !include examples/team.json
+    put:
+      description: "update team info"
+      body:
+        application/json:
+          type: typeTeam
+          example: !include examples/team.json
+      responses:
+        200:
+          body:
+            application/json:
+              type: typeTeam
+              example: !include examples/team.json
+    delete:
+      description: "remove the team from the db"
+      responses: 
+        204:
+    /players:
+      description: "collection of all currently active professional players"
+      post:
+        description: "add new players to the database"
+        body:
+          application/json:
+            type: typePlayer[]
+            example: !include examples/playerArray.json
+        responses: 
+          201:
+            body:
+              application/json:
+                type: typePlayer[]
+                example: !include examples/playerArray.json
+      get:
+        description: "get a list of players on a specific team"
+        queryParameters:
+          teamTag: 
+            type: string
+            required: false
+            minLength: 2
+            maxLength: 3
+        responses:
+          200:
+            body:
+              application/json:
+                type: typePlayer[]
+                example: !include examples/playerArray.json
+      /{playerId}:
+        uriParameters:
+          playerId:
+            type: integer
+        get:
+          description: "get a player by their id"
+          responses:
+            200:
+              body:
+                application/json:
+                  type: typePlayer
+                  example: !include examples/player.json
+        put:
+          description: "update info of a specific player"
+          body:
+            application/json:
+              type: typePlayer
+              example: !include examples/player.json
+          responses: 
+            200:
+              body:
+                application/json:
+                  type: typePlayer
+                  example: !include examples/player.json
+        delete:
+          description: "removes the entry for given id"
+          responses: 
+            204:

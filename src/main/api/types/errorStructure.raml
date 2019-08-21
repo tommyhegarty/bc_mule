@@ -1,0 +1,19 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+  code:
+    type:  string
+    example: '404'
+    description: HTTP Status Code
+    required: true
+  message:
+    type:  string
+    example: 'Cannot find object'
+    description: The error message
+    required: true
+  description:
+    type:  string
+    example: 'Cannot connect to db due to timeout. Try again later'
+    description: Additional details about the error, and if possible, hints to solve.
+    required: false

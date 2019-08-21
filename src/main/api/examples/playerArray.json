@@ -1,0 +1,16 @@
+[
+{
+	"playerId": 1,
+	"ign": "BrokenBlade",
+	"teamTag": "TSM",
+	"team": "Team Solo Mid",
+	"role": "top"
+},
+{
+	"playerId": 2,
+	"ign": "Doublelift",
+	"teamTag": "TL",
+	"team": "Team Liquid",
+	"role": "adc"
+}
+]

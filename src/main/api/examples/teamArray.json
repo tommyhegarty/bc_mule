@@ -1,0 +1,19 @@
+[
+{
+  "teamId": 1,
+  "teamTag":"TSM",
+  "team":"Team Solo Mid",
+  "region":"NA",
+  "wins":10,
+  "losses":7
+}
+,
+{
+  "teamId": 2,
+  "teamTag": "G2",
+  "team": "G2 Esports",
+  "region": "EU",
+  "wins": 13,
+  "losses": 2
+}
+]
