@@ -1,0 +1,20 @@
+<settings xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd" xmlns="http://maven.apache.org/SETTINGS/1.1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <profiles>
+    <profile>
+      <repositories>
+        <repository>
+           <releases><enabled>true</enabled></releases>
+           <snapshots><enabled>true</enabled></snapshots>
+          <id>nexus</id>
+          <name>central</name>
+          <url>https://maven.ms3-inc.com/repository/central/</url>
+        </repository>
+        </repositories>
+      <id>artifactory</id>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>artifactory</activeProfile>
+  </activeProfiles>
+</settings>

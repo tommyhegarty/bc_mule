@@ -2,11 +2,10 @@
 usage: Add to all API resources that have error handling
 responses:
   400:
-  401:
-  403:
   404:
-  500:
-    description: Implements the MuleSoft Internal Error Handling Module
+  405:
+  406:
+  415:
     body:
       application/json:
         type: !include ../types/errorStructure.raml
