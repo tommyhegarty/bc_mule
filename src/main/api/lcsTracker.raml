@@ -45,12 +45,12 @@ securedBy: [basic]
           application/json:
             type: typeTeam[]
             example: !include examples/teamArray.json
-  /{teamId}:
+  /{tag}:
     uriParameters:
-      teamId:
-        type: integer
+      tag:
+        type: string
     get:
-      description: "get the team info for the team id"
+      description: "get the team info for the team tag"
       responses:
         200:
           body:
@@ -101,12 +101,12 @@ securedBy: [basic]
               application/json:
                 type: typePlayer[]
                 example: !include examples/playerArray.json
-      /{playerId}:
+      /{ign}:
         uriParameters:
-          playerId:
-            type: integer
+          ign:
+            type: string
         get:
-          description: "get a player by their id"
+          description: "get a player by their ign"
           responses:
             200:
               body:
