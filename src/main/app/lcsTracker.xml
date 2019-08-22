@@ -18,58 +18,57 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
         <apikit:console config-ref="lcsTracker-config" doc:name="APIkit Console"/>
     </flow>
     <flow name="put:/teams/{tag}/players/{ign}:application/json:lcsTracker-config">
-        <set-payload value="{&#xD;&#xA;  &quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;TSM&quot;,&#xD;&#xA;  &quot;role&quot;: &quot;top&quot;&#xD;&#xA;}" doc:name="Set Payload"/>
+        <flow-ref name="putPlayer" doc:name="Flow Reference"/>
+        <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
+
     </flow>
     <flow name="put:/teams/{tag}:application/json:lcsTracker-config">
-        <set-payload value="{&#xD;&#xA;&#x9;&quot;tag&quot;:&quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;&#x9;&quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;&#x9;&quot;wins&quot;:10,&#xD;&#xA;&#x9;&quot;losses&quot;:7&#xD;&#xA;}" doc:name="Set Payload"/>
+        <flow-ref name="putTeam" doc:name="Flow Reference"/>
+        <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
     <flow name="delete:/teams/{tag}/players/{ign}:lcsTracker-config">
+        <flow-ref name="deletePlayer" doc:name="Flow Reference"/>
+
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
     </flow>
     <flow name="delete:/teams/{tag}:lcsTracker-config">
+        <flow-ref name="deleteTeam" doc:name="Flow Reference"/>
+
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
     </flow>
     <flow name="get:/teams/{tag}/players:lcsTracker-config">
-        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;top&quot;&#xD;&#xA;},&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;Doublelift&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;TL&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;adc&quot;&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
+        <flow-ref name="getPlayers" doc:name="Flow Reference"/>
+
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
     <flow name="get:/teams:lcsTracker-config">
-        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;  &quot;tag&quot;:&quot;TSM&quot;,&#xD;&#xA;  &quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;  &quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;  &quot;wins&quot;:10,&#xD;&#xA;  &quot;losses&quot;:7&#xD;&#xA;}&#xD;&#xA;,&#xD;&#xA;{&#xD;&#xA;  &quot;tag&quot;: &quot;G2&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;G2 Esports&quot;,&#xD;&#xA;  &quot;region&quot;: &quot;EU&quot;,&#xD;&#xA;  &quot;wins&quot;: 13,&#xD;&#xA;  &quot;losses&quot;: 2&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
+        <flow-ref name="getTeams" doc:name="Flow Reference"/>
+
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
     <flow name="get:/teams/{tag}/players/{ign}:lcsTracker-config">
-        <set-payload value="{&#xD;&#xA;  &quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;TSM&quot;,&#xD;&#xA;  &quot;role&quot;: &quot;top&quot;&#xD;&#xA;}" doc:name="Set Payload"/>
+        <flow-ref name="getPlayerByIgn" doc:name="Flow Reference"/>
+
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
     <flow name="get:/teams/{tag}:lcsTracker-config">
-        <set-payload value="{&#xD;&#xA;&#x9;&quot;tag&quot;:&quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;&#x9;&quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;&#x9;&quot;wins&quot;:10,&#xD;&#xA;&#x9;&quot;losses&quot;:7&#xD;&#xA;}" doc:name="Set Payload"/>
+        <flow-ref name="getTeamByTag" doc:name="Flow Reference"/>
+
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
     <flow name="post:/teams/{tag}/players:application/json:lcsTracker-config">
-        <dw:transform-message doc:name="Transform Message">
-            <dw:set-payload><![CDATA[%dw 1.0
-%output application/java
----
-payload]]></dw:set-payload>
-        </dw:transform-message>
-        <foreach doc:name="For Each">
-            <db:insert config-ref="MySQL_Configuration" doc:name="Database">
-                <db:parameterized-query><![CDATA[INSERT INTO players(ign, igrole, team) VALUES(#[payload['ign']],#[payload['role']],#[message.inboundProperties.'http.uri.params'.tag]);]]></db:parameterized-query>
-            </db:insert>
-        </foreach>
+        <flow-ref name="postPlayers" doc:name="Flow Reference"/>
+
         <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;BrokenBlade&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;TSM&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;top&quot;&#xD;&#xA;},&#xD;&#xA;{&#xD;&#xA;&#x9;&quot;ign&quot;: &quot;Doublelift&quot;,&#xD;&#xA;&#x9;&quot;team&quot;: &quot;TL&quot;,&#xD;&#xA;&#x9;&quot;role&quot;: &quot;adc&quot;&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
     <flow name="post:/teams:application/json:lcsTracker-config">
-        <dw:transform-message doc:name="Transform Message">
-            <dw:set-payload><![CDATA[%dw 1.0
-%output application/java
----
-payload]]></dw:set-payload>
-        </dw:transform-message>
-        <foreach doc:name="For Each">
-            <db:insert config-ref="MySQL_Configuration" doc:name="Database">
-                <db:parameterized-query><![CDATA[INSERT INTO teams(team, tag, region, wins, losses) VALUES(#[payload['team']],#[payload['tag']],#[payload['region']],#[payload['wins']],#[payload['losses']]);]]></db:parameterized-query>
-            </db:insert>
-        </foreach>
+        <flow-ref name="postTeams" doc:name="Flow Reference"/>
+
         <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-        <set-payload value="[&#xD;&#xA;{&#xD;&#xA;  &quot;tag&quot;:&quot;TSM&quot;,&#xD;&#xA;  &quot;team&quot;:&quot;Team Solo Mid&quot;,&#xD;&#xA;  &quot;region&quot;:&quot;NA&quot;,&#xD;&#xA;  &quot;wins&quot;:10,&#xD;&#xA;  &quot;losses&quot;:7&#xD;&#xA;}&#xD;&#xA;,&#xD;&#xA;{&#xD;&#xA;  &quot;tag&quot;: &quot;G2&quot;,&#xD;&#xA;  &quot;team&quot;: &quot;G2 Esports&quot;,&#xD;&#xA;  &quot;region&quot;: &quot;EU&quot;,&#xD;&#xA;  &quot;wins&quot;: 13,&#xD;&#xA;  &quot;losses&quot;: 2&#xD;&#xA;}&#xD;&#xA;]" doc:name="Set Payload"/>
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
     <apikit:mapping-exception-strategy name="lcsTracker-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">

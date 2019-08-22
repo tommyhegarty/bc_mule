@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <flow name="putPlayer">
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <set-variable variableName="ign" value="#[payload.ign]" doc:name="Variable"/>
+        <db:update config-ref="MySQL_Configuration" doc:name="updateQu">
+            <db:parameterized-query><![CDATA[UPDATE players SET team=#[payload.team], ign=#[payload.ign], igrole=#[payload.role] WHERE ign=#[message.inboundProperties.'http.uri.params'.ign];]]></db:parameterized-query>
+        </db:update>
+        <db:select config-ref="MySQL_Configuration" doc:name="getUpdated">
+            <db:parameterized-query><![CDATA[SELECT * FROM players WHERE ign=#[ign];]]></db:parameterized-query>
+        </db:select>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload[0]]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="deletePlayer">
+        <db:delete config-ref="MySQL_Configuration" doc:name="delete">
+            <db:parameterized-query><![CDATA[DELETE * FROM players WHERE ign=#[message.inboundProperties.'http.uri.params'.ign];]]></db:parameterized-query>
+        </db:delete>
+    </flow>
+    <flow name="getPlayers">
+        <choice doc:name="Choice">
+            <when expression="#[message.inboundProperties.'http.query.params'.tag=='']">
+                <db:select config-ref="MySQL_Configuration" doc:name="noTag">
+                    <db:parameterized-query><![CDATA[SELECT * FROM players;]]></db:parameterized-query>
+                </db:select>
+            </when>
+            <otherwise>
+                <db:select config-ref="MySQL_Configuration" doc:name="selectTag">
+                    <db:parameterized-query><![CDATA[SELECT * FROM players WHERE team=#[message.inboundProperties.'http.query.params'.tag];]]></db:parameterized-query>
+                </db:select>
+            </otherwise>
+        </choice>
+    </flow>
+    <flow name="getPlayerByIgn">
+        <db:select config-ref="MySQL_Configuration" doc:name="selectIgn">
+            <db:parameterized-query><![CDATA[SELECT * FROM players WHERE ign=#[message.inboundProperties.'http.uri.params'.ign];]]></db:parameterized-query>
+        </db:select>
+    </flow>
+    <flow name="postPlayers">
+        <dw:transform-message doc:name="toList">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <foreach doc:name="For Each">
+            <db:insert config-ref="MySQL_Configuration" doc:name="insertPlayer">
+                <db:parameterized-query><![CDATA[INSERT INTO players(ign, igrole, team) VALUES(#[payload['ign']],#[payload['role']],#[message.inboundProperties.'http.uri.params'.tag]);]]></db:parameterized-query>
+            </db:insert>
+        </foreach>
+        <dw:transform-message doc:name="toJson">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+</mule>
