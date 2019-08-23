@@ -8,6 +8,41 @@
     <packaging>mule</packaging>
 	<name>Mule lcstracker Application</name>
 
+<profiles>	
+	<profile>
+  <id>cloudhub</id>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.mule.tools.maven</groupId>
+        <artifactId>mule-maven-plugin</artifactId>
+        <configuration>
+          <deploymentType>cloudhub</deploymentType>
+          <muleVersion>${mule.version}</muleVersion> 
+          <username>${anypoint.username}</username> 
+          <password>${anypoint.password}</password> 
+          <applicationName>${artifactId}</applicationName>
+          <environment>${cloundhub.env}</environment> 
+          <businessGroup>${anypoint.businessGroup}</businessGroup>
+          <region>${cloudhub.region}</region>
+          <uri>${anypoint.uri}</uri> 
+          <workerType>${cloudhub.workerType}</workerType>
+          <workers>${cloudhub.workers}</workers>
+        </configuration>
+        <executions>
+          <execution>
+            <id>deploy</id>
+            <phase>deploy</phase>
+            <goals>
+              <goal>deploy</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</profile>
+</profiles>
     <properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -15,7 +50,6 @@
 		<mule.version>3.9.2</mule.version>
     	<mule.tools.version>1.7</mule.tools.version>
 	</properties>
-
 	<build>
 		<plugins>
 			<plugin>
