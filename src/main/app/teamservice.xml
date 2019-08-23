@@ -8,7 +8,7 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
-    <flow name="putTeam">
+    <sub-flow name="putTeam">
         <dw:transform-message doc:name="Transform Message">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
@@ -28,13 +28,13 @@ payload]]></dw:set-payload>
 ---
 payload[0]]]></dw:set-payload>
         </dw:transform-message>
-    </flow>
-    <flow name="deleteTeam">
+    </sub-flow>
+    <sub-flow name="deleteTeam">
         <db:delete config-ref="MySQL_Configuration" doc:name="delete">
             <db:parameterized-query><![CDATA[DELETE * FROM teams WHERE tag=#[message.inboundProperties.'http.uri.params'.tag];]]></db:parameterized-query>
         </db:delete>
-    </flow>
-    <flow name="getTeams">
+    </sub-flow>
+    <sub-flow name="getTeams">
         <logger message="#[message.inboundProperties.'http.query.params'.region]" level="INFO" doc:name="Logger"/>
         <choice doc:name="Choice">
             <when expression="#[message.inboundProperties.'http.query.params'.region=='']">
@@ -49,13 +49,13 @@ payload[0]]]></dw:set-payload>
                 </db:select>
             </otherwise>
         </choice>
-    </flow>
-    <flow name="getTeamByTag">
+    </sub-flow>
+    <sub-flow name="getTeamByTag">
         <db:select config-ref="MySQL_Configuration" doc:name="getTag">
             <db:parameterized-query><![CDATA[SELECT * FROM teams WHERE tag=#[message.inboundProperties.'http.uri.params'.tag];]]></db:parameterized-query>
         </db:select>
-    </flow>
-    <flow name="postTeams">
+    </sub-flow>
+    <sub-flow name="postTeams">
         <dw:transform-message doc:name="toList">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
@@ -73,5 +73,5 @@ payload]]></dw:set-payload>
 ---
 payload]]></dw:set-payload>
         </dw:transform-message>
-    </flow>
+    </sub-flow>
 </mule>
