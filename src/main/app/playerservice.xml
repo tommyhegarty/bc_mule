@@ -35,8 +35,6 @@ payload[0]]]></dw:set-payload>
         </db:delete>
     </sub-flow>
     <sub-flow name="getPlayers">
-        <logger message="#[message.inboundProperties.'http.query.params'.role]" level="INFO" doc:name="Logger"/>
-        <logger message="#[message.inboundProperties.'http.uri.params'.tag]" level="INFO" doc:name="Logger"/>
         <choice doc:name="Choice">
             <when expression="#[message.inboundProperties.'http.query.params'.role=='']">
                 <db:select config-ref="MySQL_Configuration" doc:name="noRole">
