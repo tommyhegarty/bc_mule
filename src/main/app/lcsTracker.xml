@@ -24,7 +24,7 @@ http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/
 >
     <http:listener-config name="lcsTracker-httpListenerConfig" host="0.0.0.0" port="${http.port}" doc:name="HTTP Listener Configuration"/>
     <apikit:config name="lcsTracker-config" raml="lcsTracker.raml" consoleEnabled="false" doc:name="Router"/>
-    <db:mysql-config name="MySQL_Configuration" host="0.tcp.ngrok.io" port="15618" user="basic" password="lowpass" database="lcstracker" doc:name="MySQL Configuration"/>
+    <db:mysql-config name="MySQL_Configuration" host="0.tcp.ngrok.io" port="16841" user="basic" password="lowpass" database="lcstracker" doc:name="MySQL Configuration"/>
     
 <spring:beans>
    <ss:authentication-manager alias="authenticationManager">
@@ -105,6 +105,13 @@ http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/
         <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
     <apikit:mapping-exception-strategy name="lcsTracker-apiKitGlobalExceptionMapping">
+        <apikit:mapping statusCode="500">
+            <apikit:exception value="java.sql.SQLIntegrityConstraintViolationException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{
+&quot;message&quot;: &quot;Duplicate attempt sent to SQL server&quot;
+}" doc:name="Set Payload"/>
+        </apikit:mapping>
         <apikit:mapping statusCode="404">
             <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
             <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
