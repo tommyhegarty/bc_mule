@@ -86,12 +86,11 @@ securedBy: [basic]
                 type: typePlayer[]
                 example: !include examples/playerArray.json
       get:
-        description: "get a list of players on a specific team"
+        description: "get a list players from /team with certain role"
         queryParameters:
-          teamTag: 
+          role: 
             type: string
             required: false
-            minLength: 2
             maxLength: 3
         responses:
           200:
