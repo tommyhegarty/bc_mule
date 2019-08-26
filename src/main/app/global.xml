@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:context="http://www.springframework.org/schema/context" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:mule-ss="http://www.mulesoft.org/schema/mule/spring-security"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:ss="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/spring-security http://www.mulesoft.org/schema/mule/spring-security/current/mule-spring-security.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd">
+    
+        
+    <http:listener-config name="lcsTracker-httpListenerConfig" host="0.0.0.0" port="${http.port}" doc:name="HTTP Listener Configuration"/>
+    <apikit:config name="lcsTracker-config" raml="lcsTracker.raml" consoleEnabled="false" doc:name="Router" keepRamlBaseUri="false">
+        <apikit:flow-mapping resource="/teams" action="get" flow-ref="teams_getTeamsByRegion_flow"/>
+        <apikit:flow-mapping resource="/teams/{tag}" action="get" flow-ref="teams_getTeamByTag_flow"/>
+        <apikit:flow-mapping resource="/teams" action="post" content-type="application/json" flow-ref="teams_postTeams_flow"/>
+        <apikit:flow-mapping resource="/teams/{tag}" action="put" content-type="application/json" flow-ref="teams_putTeam_flow"/>
+        <apikit:flow-mapping resource="/teams/{tag}" action="delete" flow-ref="teams_deleteTeam_flow"/>
+        <apikit:flow-mapping resource="/teams/{tag}/players" action="get" flow-ref="players_getPlayersByRole_flow"/>
+        <apikit:flow-mapping resource="/teams/{tag}/players" action="post" content-type="application/json" flow-ref="players_postPlayers_flow"/>
+        <apikit:flow-mapping resource="/teams/{tag}/players/{ign}" action="get" flow-ref="players_getPlayerByIgn_flow"/>
+        <apikit:flow-mapping resource="/teams/{tag}/players/{ign}" action="put" flow-ref="players_putPlayer_flow"/>
+        <apikit:flow-mapping resource="/teams/{tag}/players/{ign}" action="delete" flow-ref="players_deletePlayer_flow"/>
+    </apikit:config>
+    <db:mysql-config name="MySQL_Configuration" host="${db_hostname}" port="${db_port}" user="${db_username}" password="${db_password}" database="lcstracker" doc:name="MySQL Configuration"/>
+    
+	<spring:beans>
+	   <ss:authentication-manager alias="authenticationManager">
+	     <ss:authentication-provider>
+	       <ss:user-service id="userService">
+	          <ss:user name="root" password="rootpass" authorities="ROLE_ADMIN" />
+	          <ss:user name="basic" password="lowpass" authorities="ROLE_DEV" />
+	        </ss:user-service>
+	    </ss:authentication-provider>
+	  </ss:authentication-manager>
+	</spring:beans>
+
+	<mule-ss:security-manager name="muleSecurityManager" doc:name="Spring Security Provider">
+	  <mule-ss:delegate-security-provider name="memory-provider" delegate-ref="authenticationManager" />
+	</mule-ss:security-manager>
+    <context:property-placeholder location="${mule.env}.properties"/>
+    
+    
+    
+    <sub-flow name="global_setPayload_subFlow">
+        <set-property propertyName="Content-Type" value="application/json" doc:name="Set Content-Type to application/json"/>
+        <set-payload value="#[payload]" doc:name="Ensure payload is set"/>
+    </sub-flow>
+    <sub-flow name="global_setNullPayload_subFlow">
+        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set payload to null"/>
+    </sub-flow>
+
+	
+	
+</mule>

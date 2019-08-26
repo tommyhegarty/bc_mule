@@ -4,74 +4,79 @@
 	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
-http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
-http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
-http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
-    <sub-flow name="putTeam">
-        <dw:transform-message doc:name="Transform Message">
+	http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+	http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+	http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+	http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    
+    <sub-flow name="teams_putTeam_subFlow">
+        <dw:transform-message doc:name="Change paylod to Java and set tag">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
 payload]]></dw:set-payload>
+            <dw:set-variable variableName="tag"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.tag]]></dw:set-variable>
         </dw:transform-message>
-        <set-variable variableName="tag" value="#[payload.tag]" doc:name="Variable"/>
-        <db:update config-ref="MySQL_Configuration" doc:name="updateQu">
+        <db:update config-ref="MySQL_Configuration" doc:name="Update team with payload information">
             <db:parameterized-query><![CDATA[UPDATE teams SET team=#[payload.team],tag=#[payload.tag],region=#[payload.region],wins=#[payload.wins],losses=#[payload.losses] WHERE tag=#[message.inboundProperties.'http.uri.params'.tag];]]></db:parameterized-query>
         </db:update>
-        <db:select config-ref="MySQL_Configuration" doc:name="getUpdated">
+        <db:select config-ref="MySQL_Configuration" doc:name="Retrieve now-updated team information">
             <db:parameterized-query><![CDATA[SELECT * FROM teams WHERE #[tag];]]></db:parameterized-query>
         </db:select>
-        <dw:transform-message doc:name="Transform Message">
+        <dw:transform-message doc:name="Return payload to json form">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/json
 ---
 payload[0]]]></dw:set-payload>
         </dw:transform-message>
     </sub-flow>
-    <sub-flow name="deleteTeam">
-        <db:delete config-ref="MySQL_Configuration" doc:name="delete">
+    <sub-flow name="teams_deleteTeam_subFlow">
+        <db:delete config-ref="MySQL_Configuration" doc:name="Delete team of given tag">
             <db:parameterized-query><![CDATA[DELETE * FROM teams WHERE tag=#[message.inboundProperties.'http.uri.params'.tag];]]></db:parameterized-query>
         </db:delete>
     </sub-flow>
-    <sub-flow name="getTeams">
-        <logger message="#[message.inboundProperties.'http.query.params'.region]" level="INFO" doc:name="Logger"/>
-        <choice doc:name="Choice">
+    <sub-flow name="teams_getTeamsByRegion_subFlow">
+        <choice doc:name="Determine if region is empty">
             <when expression="#[message.inboundProperties.'http.query.params'.region=='']">
                 <db:select config-ref="MySQL_Configuration" doc:name="noRegion">
                     <db:parameterized-query><![CDATA[SELECT * FROM teams;]]></db:parameterized-query>
                 </db:select>
-                <logger message="#[message.inboundProperties.'http.query.params'.region]" level="INFO" doc:name="Logger"/>
+                <logger message="Getting all teams in database." level="INFO" doc:name="Give info about empty region" category="com.ms3.lcstracker.teams"/>
             </when>
             <otherwise>
                 <db:select config-ref="MySQL_Configuration" doc:name="region">
                     <db:parameterized-query><![CDATA[SELECT * FROM teams WHERE region=#[message.inboundProperties.'http.query.params'.region];]]></db:parameterized-query>
                 </db:select>
+                <logger message="Getting teams of region: [#[message.inboundProperties.'http.query.params'.region]]" category="com.ms3.lcstracker.teams" level="INFO" doc:name="Log the query parameter"/>
             </otherwise>
         </choice>
     </sub-flow>
-    <sub-flow name="getTeamByTag">
-        <db:select config-ref="MySQL_Configuration" doc:name="getTag">
+    <sub-flow name="teams_getTeamByTag_subFlow">
+        <db:select config-ref="MySQL_Configuration" doc:name="Retrieve team by tag">
             <db:parameterized-query><![CDATA[SELECT * FROM teams WHERE tag=#[message.inboundProperties.'http.uri.params'.tag];]]></db:parameterized-query>
         </db:select>
     </sub-flow>
-    <sub-flow name="postTeams">
-        <dw:transform-message doc:name="toList">
+    <sub-flow name="teams_postTeams_subFlow">
+        <dw:transform-message doc:name="Convert payload to Java object">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
 payload]]></dw:set-payload>
         </dw:transform-message>
-        <foreach doc:name="For Each">
-            <db:insert config-ref="MySQL_Configuration" doc:name="postTeam">
+        <foreach doc:name="Iterate through each team">
+            <db:insert config-ref="MySQL_Configuration" doc:name="Insert each team T into DB">
                 <db:parameterized-query><![CDATA[INSERT INTO teams(team,tag,region,wins,losses) VALUES(#[payload['team']],#[payload['tag']],#[payload['region']],#[payload['wins']],#[payload['losses']]);]]></db:parameterized-query>
             </db:insert>
         </foreach>
-        <dw:transform-message doc:name="Transform Message">
+        <dw:transform-message doc:name="Return payload back to json">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/json
 ---
 payload]]></dw:set-payload>
         </dw:transform-message>
     </sub-flow>
+
 </mule>

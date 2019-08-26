@@ -8,68 +8,78 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
-    <sub-flow name="putPlayer">
-        <dw:transform-message doc:name="Transform Message">
+    
+    <sub-flow name="players_putPlayer_subFlow">
+        <dw:transform-message doc:name="Change payload to Java and set ign">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
 payload]]></dw:set-payload>
+            <dw:set-variable variableName="ign"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.ign]]></dw:set-variable>
         </dw:transform-message>
-        <set-variable variableName="ign" value="#[payload.ign]" doc:name="Variable"/>
-        <db:update config-ref="MySQL_Configuration" doc:name="updateQu">
+        <logger message="Currently updating player: [#[message.inboundProperties.'http.uri.params'.ign]]" level="INFO" category="com.ms3.lcstracker.players" doc:name="Log current ign of player we're updating"/>
+        <db:update config-ref="MySQL_Configuration" doc:name="Update Player by ign">
             <db:parameterized-query><![CDATA[UPDATE players SET team=#[payload.team], ign=#[payload.ign], igrole=#[payload.role] WHERE ign=#[message.inboundProperties.'http.uri.params'.ign];]]></db:parameterized-query>
         </db:update>
-        <db:select config-ref="MySQL_Configuration" doc:name="getUpdated">
+        <db:select config-ref="MySQL_Configuration" doc:name="Retrieve updated Player by ign">
             <db:parameterized-query><![CDATA[SELECT * FROM players WHERE ign=#[ign];]]></db:parameterized-query>
         </db:select>
-        <dw:transform-message doc:name="Transform Message">
+        <dw:transform-message doc:name="Return payload to json format">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/json
 ---
 payload[0]]]></dw:set-payload>
         </dw:transform-message>
     </sub-flow>
-    <sub-flow name="deletePlayer">
-        <db:delete config-ref="MySQL_Configuration" doc:name="delete">
+    <sub-flow name="players_deletePlayer_subFlow">
+        <logger message="Deleting player: [#[message.inboundProperties.'http.uri.params'.ign]]" level="INFO" category="com.ms3.lcstracker.players" doc:name="Log ign of player we're deleting"/>
+        <db:delete config-ref="MySQL_Configuration" doc:name="Delete Player from DB by ign">
             <db:parameterized-query><![CDATA[DELETE * FROM players WHERE ign=#[message.inboundProperties.'http.uri.params'.ign];]]></db:parameterized-query>
         </db:delete>
     </sub-flow>
-    <sub-flow name="getPlayers">
-        <choice doc:name="Choice">
+    <sub-flow name="players_getPlayersByRole_subFlow">
+        <choice doc:name="Determine if role is empty">
             <when expression="#[message.inboundProperties.'http.query.params'.role=='']">
-                <db:select config-ref="MySQL_Configuration" doc:name="noRole">
+                <db:select config-ref="MySQL_Configuration" doc:name="Get all players of given team">
                     <db:parameterized-query><![CDATA[SELECT * FROM players WHERE team=#[message.inboundProperties.'http.uri.params'.tag];]]></db:parameterized-query>
                 </db:select>
             </when>
             <otherwise>
-                <db:select config-ref="MySQL_Configuration" doc:name="selectRole">
+                <logger message="Retrieving players from [#[message.inboundProperties.'http.uri.params'.tag]] with role: [#[message.inboundProperties.'http.query.params'.role]]" level="INFO" category="com.ms3.lcstracker.players" doc:name="Log the role we're searching for"/>
+                <db:select config-ref="MySQL_Configuration" doc:name="Get #role players of given team">
                     <db:parameterized-query><![CDATA[SELECT * FROM players WHERE team=#[message.inboundProperties.'http.uri.params'.tag] AND igrole=#[message.inboundProperties.'http.query.params'.role];]]></db:parameterized-query>
                 </db:select>
             </otherwise>
         </choice>
     </sub-flow>
-    <sub-flow name="getPlayerByIgn">
-        <db:select config-ref="MySQL_Configuration" doc:name="selectIgn">
+    <sub-flow name="players_getPlayerByIgn_subFlow">
+        <logger message="Retrieving player with ign: [#[message.inboundProperties.'http.uri.params'.ign]]" level="INFO" category="com.ms3.lcstracker.players" doc:name="Log ign of player we're searching for"/>
+        <db:select config-ref="MySQL_Configuration" doc:name="Retrieve Player with given ign">
             <db:parameterized-query><![CDATA[SELECT * FROM players WHERE ign=#[message.inboundProperties.'http.uri.params'.ign];]]></db:parameterized-query>
         </db:select>
     </sub-flow>
-    <sub-flow name="postPlayers">
-        <dw:transform-message doc:name="toList">
+    <sub-flow name="players_postPlayers_subFlow">
+        <dw:transform-message doc:name="Change payload to Java">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
 payload]]></dw:set-payload>
         </dw:transform-message>
-        <foreach doc:name="For Each">
-            <db:insert config-ref="MySQL_Configuration" doc:name="insertPlayer">
+        <foreach doc:name="Iterate each player">
+            <logger message="Currently inserting: [#[payload['ign']]]" level="INFO" category="com.ms3.lcstracker.players" doc:name="Log ign of player that we're inserting"/>
+            <db:insert config-ref="MySQL_Configuration" doc:name="Insert Player p into the DB">
                 <db:parameterized-query><![CDATA[INSERT INTO players(ign, igrole, team) VALUES(#[payload['ign']],#[payload['role']],#[message.inboundProperties.'http.uri.params'.tag]);]]></db:parameterized-query>
             </db:insert>
         </foreach>
-        <dw:transform-message doc:name="toJson">
+        <dw:transform-message doc:name="Change payload back to returnable json">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/json
 ---
 payload]]></dw:set-payload>
         </dw:transform-message>
     </sub-flow>
+
 </mule>

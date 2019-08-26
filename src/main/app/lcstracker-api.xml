@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" 
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" 
 xmlns:db="http://www.mulesoft.org/schema/mule/db" 
 xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" 
 xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" 
@@ -22,89 +22,65 @@ http://www.springframework.org/schema/security http://www.springframework.org/sc
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
 http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd"
 >
-    <http:listener-config name="lcsTracker-httpListenerConfig" host="0.0.0.0" port="${http.port}" doc:name="HTTP Listener Configuration"/>
-    <apikit:config name="lcsTracker-config" raml="lcsTracker.raml" consoleEnabled="false" doc:name="Router"/>
-    <db:mysql-config name="MySQL_Configuration" host="0.tcp.ngrok.io" port="16841" user="basic" password="lowpass" database="lcstracker" doc:name="MySQL Configuration"/>
-    
-<spring:beans>
-   <ss:authentication-manager alias="authenticationManager">
-     <ss:authentication-provider>
-       <ss:user-service id="userService">
-          <ss:user name="root" password="rootpass" authorities="ROLE_ADMIN" />
-          <ss:user name="basic" password="lowpass" authorities="ROLE_DEV" />
-        </ss:user-service>
-    </ss:authentication-provider>
-  </ss:authentication-manager>
-</spring:beans>
-
-<mule-ss:security-manager name="muleSecurityManager" doc:name="Spring Security Provider">
-  <mule-ss:delegate-security-provider name="memory-provider" delegate-ref="authenticationManager" />
-</mule-ss:security-manager>
-    
+  
     <flow name="lcsTracker-main">
         <http:listener config-ref="lcsTracker-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
-		<mule-ss:http-security-filter realm="mule-realm"/>
+		<mule-ss:http-security-filter realm="mule-realm" doc:name="Security Filter"/>
         <apikit:router config-ref="lcsTracker-config" doc:name="APIkit Router"/>
-        <exception-strategy ref="lcsTracker-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
+        <exception-strategy ref="global_exceptionMapper" doc:name="Reference Exception Strategy"/>
     </flow>
     <flow name="lcsTracker-console">
         <http:listener config-ref="lcsTracker-httpListenerConfig" path="/console/*" doc:name="HTTP"/>
         <apikit:console config-ref="lcsTracker-config" doc:name="APIkit Console"/>
     </flow>
-    <flow name="put:/teams/{tag}/players/{ign}:application/json:lcsTracker-config">
-        <flow-ref name="putPlayer" doc:name="Flow Reference"/>
-        <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-        <set-payload value="#[payload]" doc:name="Set Payload"/>
+    <flow name="players_putPlayer_flow">
+        <flow-ref name="players_putPlayer_subFlow" doc:name="Call putPlayer subFlow"/>
+
 
     </flow>
-    <flow name="put:/teams/{tag}:application/json:lcsTracker-config">
-        <flow-ref name="putTeam" doc:name="Flow Reference"/>
-        <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-        <set-payload value="#[payload]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/teams/{tag}/players/{ign}:lcsTracker-config">
-        <flow-ref name="deletePlayer" doc:name="Flow Reference"/>
+    <flow name="teams_putTeam_flow">
+        <flow-ref name="teams_putTeam_subFlow" doc:name="Call putTeam subFlow"/>
 
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
     </flow>
-    <flow name="delete:/teams/{tag}:lcsTracker-config">
-        <flow-ref name="deleteTeam" doc:name="Flow Reference"/>
+    <flow name="players_deletePlayer_flow">
+        <flow-ref name="players_deletePlayer_subFlow" doc:name="Call deletePlayer subFlow"/>
 
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
     </flow>
-    <flow name="get:/teams/{tag}/players:lcsTracker-config">
-        <flow-ref name="getPlayers" doc:name="Flow Reference"/>
+    <flow name="teams_deleteTeam_flow">
+        <flow-ref name="teams_deleteTeam_subFlow" doc:name="Call deleteTeam subFlow"/>
 
-        <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
-    <flow name="get:/teams:lcsTracker-config">
-        <flow-ref name="getTeams" doc:name="Flow Reference"/>
+    <flow name="players_getPlayersByRole_flow">
+        <flow-ref name="players_getPlayersByRole_subFlow" doc:name="Call getPlayersByRole subFlow"/>
 
-        <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
-    <flow name="get:/teams/{tag}/players/{ign}:lcsTracker-config">
-        <flow-ref name="getPlayerByIgn" doc:name="Flow Reference"/>
+    <flow name="teams_getTeamsByRegion_flow">
+        <flow-ref name="teams_getTeamsByRegion_subFlow" doc:name="Call getTeamsByRegion subFlow"/>
+
+    </flow>
+    <flow name="players_getPlayerByIgn_flow">
+        <flow-ref name="players_getPlayerByIgn_subFlow" doc:name="Call getPlayerByIgn subFlow"/>
 
         <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
-    <flow name="get:/teams/{tag}:lcsTracker-config">
-        <flow-ref name="getTeamByTag" doc:name="Flow Reference"/>
+    <flow name="teams_getTeamByTag_flow">
+        <flow-ref name="teams_getTeamByTag_subFlow" doc:name="Call getTeamByTag subFlow"/>
 
         <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
-    <flow name="post:/teams/{tag}/players:application/json:lcsTracker-config">
-        <flow-ref name="postPlayers" doc:name="Flow Reference"/>
+    <flow name="players_postPlayers_flow">
+        <flow-ref name="players_postPlayers_subFlow" doc:name="Call postPlayers subFlow"/>
 
         <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
         <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
-    <flow name="post:/teams:application/json:lcsTracker-config">
-        <flow-ref name="postTeams" doc:name="Flow Reference"/>
+    <flow name="teams_postTeams_flow">
+        <flow-ref name="teams_postTeams_subFlow" doc:name="Call postTeams subFlow"/>
 
         <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
         <set-payload value="#[payload]" doc:name="Set Payload"/>
     </flow>
-    <apikit:mapping-exception-strategy name="lcsTracker-apiKitGlobalExceptionMapping">
+    <apikit:mapping-exception-strategy name="global_exceptionMapper">
         <apikit:mapping statusCode="500">
             <apikit:exception value="java.sql.SQLIntegrityConstraintViolationException"/>
             <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
