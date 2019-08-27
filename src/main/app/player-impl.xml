@@ -37,7 +37,8 @@ payload[0]]]></dw:set-payload>
     <sub-flow name="players_deletePlayer_subFlow">
         <logger message="Deleting player: [#[message.inboundProperties.'http.uri.params'.ign]]" level="INFO" category="com.ms3.lcstracker.players" doc:name="Log ign of player we're deleting"/>
         <db:delete config-ref="MySQL_Configuration" doc:name="Delete Player from DB by ign">
-            <db:parameterized-query><![CDATA[DELETE * FROM players WHERE ign=#[message.inboundProperties.'http.uri.params'.ign];]]></db:parameterized-query>
+            <db:parameterized-query><![CDATA[DELETE * FROM players WHERE ign=#[message.inboundProperties.'http.uri.params'.ign] AND team=#[message.inboundProperties.'http.uri.params'.tag];]]></db:parameterized-query>
+
         </db:delete>
     </sub-flow>
     <sub-flow name="players_getPlayersByRole_subFlow">
@@ -58,7 +59,8 @@ payload[0]]]></dw:set-payload>
     <sub-flow name="players_getPlayerByIgn_subFlow">
         <logger message="Retrieving player with ign: [#[message.inboundProperties.'http.uri.params'.ign]]" level="INFO" category="com.ms3.lcstracker.players" doc:name="Log ign of player we're searching for"/>
         <db:select config-ref="MySQL_Configuration" doc:name="Retrieve Player with given ign">
-            <db:parameterized-query><![CDATA[SELECT * FROM players WHERE ign=#[message.inboundProperties.'http.uri.params'.ign];]]></db:parameterized-query>
+            <db:parameterized-query><![CDATA[SELECT * FROM players WHERE ign=#[message.inboundProperties.'http.uri.params'.ign] AND team=#[message.inboundProperties.'http.uri.params'.tag];]]></db:parameterized-query>
+
         </db:select>
     </sub-flow>
     <sub-flow name="players_postPlayers_subFlow">
