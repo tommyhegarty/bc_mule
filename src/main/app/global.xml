@@ -49,7 +49,17 @@ http://www.springframework.org/schema/context http://www.springframework.org/sch
 	</mule-ss:security-manager>
     <context:property-placeholder location="${mule.env}.properties"/>
     
-    
+     <configuration doc:name="Configuration">
+		<expression-language>
+			<global-functions>
+				def toUUID() {
+					return java.util.UUID.randomUUID().toString()
+				}
+			</global-functions>
+		</expression-language>
+	</configuration>
+
+ 
     
     <sub-flow name="global_setPayload_subFlow">
         <set-property propertyName="Content-Type" value="application/json" doc:name="Set Content-Type to application/json"/>

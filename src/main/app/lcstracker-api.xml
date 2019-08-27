@@ -25,6 +25,7 @@ http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/
   
     <flow name="lcsTracker-main">
         <http:listener config-ref="lcsTracker-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
+        <set-property propertyName="trace-id" value="#[toUUID()]" doc:name="Set UUID"/>
 		<mule-ss:http-security-filter realm="mule-realm" doc:name="Security Filter"/>
         <apikit:router config-ref="lcsTracker-config" doc:name="APIkit Router"/>
         <exception-strategy ref="global_exceptionMapper" doc:name="Reference Exception Strategy"/>

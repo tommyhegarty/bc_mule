@@ -20,7 +20,7 @@ payload]]></dw:set-payload>
 ---
 payload.tag]]></dw:set-variable>
         </dw:transform-message>
-        <logger message="Currently updating team: [#[message.inboundProperties.'http.uri.params'.tag]]" level="INFO" doc:name="Log the name of the team that we're updating"/>
+        <logger message="CALL ID [#[message.outboundProperties.'trace-id']] Currently updating team: [#[message.inboundProperties.'http.uri.params'.tag]]" level="INFO" doc:name="Log the name of the team that we're updating"/>
         <db:update config-ref="MySQL_Configuration" doc:name="Update team with payload information">
             <db:parameterized-query><![CDATA[UPDATE teams SET team=#[payload.team],tag=#[payload.tag],region=#[payload.region],wins=#[payload.wins],losses=#[payload.losses] WHERE tag=#[message.inboundProperties.'http.uri.params'.tag];]]></db:parameterized-query>
         </db:update>
@@ -35,7 +35,7 @@ payload[0]]]></dw:set-payload>
         </dw:transform-message>
     </sub-flow>
     <sub-flow name="teams_deleteTeam_subFlow">
-        <logger message="Currently deleting the team: [#[message.inboundProperties.'http.uri.params'.tag]]" level="INFO" doc:name="Log the name of the team we're deleting"/>
+        <logger message="CALL ID [#[message.outboundProperties.'trace-id']] Currently deleting the team: [#[message.inboundProperties.'http.uri.params'.tag]]" level="INFO" doc:name="Log the name of the team we're deleting"/>
         <db:delete config-ref="MySQL_Configuration" doc:name="Delete team of given tag">
             <db:parameterized-query><![CDATA[DELETE * FROM teams WHERE tag=#[message.inboundProperties.'http.uri.params'.tag];]]></db:parameterized-query>
         </db:delete>
@@ -46,18 +46,18 @@ payload[0]]]></dw:set-payload>
                 <db:select config-ref="MySQL_Configuration" doc:name="noRegion">
                     <db:parameterized-query><![CDATA[SELECT * FROM teams;]]></db:parameterized-query>
                 </db:select>
-                <logger message="Getting all teams in database." level="INFO" doc:name="Give info about empty region" category="com.ms3.lcstracker.teams"/>
+                <logger message="CALL ID [#[message.outboundProperties.'trace-id']] Getting all teams in database." level="INFO" doc:name="Give info about empty region" category="com.ms3.lcstracker.teams"/>
             </when>
             <otherwise>
                 <db:select config-ref="MySQL_Configuration" doc:name="region">
                     <db:parameterized-query><![CDATA[SELECT * FROM teams WHERE region=#[message.inboundProperties.'http.query.params'.region];]]></db:parameterized-query>
                 </db:select>
-                <logger message="Getting teams of region: [#[message.inboundProperties.'http.query.params'.region]]" category="com.ms3.lcstracker.teams" level="INFO" doc:name="Log the query parameter"/>
+                <logger message="CALL ID [#[message.outboundProperties.'trace-id']] Getting teams of region: [#[message.inboundProperties.'http.query.params'.region]]" category="com.ms3.lcstracker.teams" level="INFO" doc:name="Log the query parameter"/>
             </otherwise>
         </choice>
     </sub-flow>
     <sub-flow name="teams_getTeamByTag_subFlow">
-        <logger message="Getting team with tag: [#[message.inboundProperties.'http.uri.params'.tag]]" level="INFO" doc:name="Log the tag of the team we're getting information on"/>
+        <logger message="CALL ID [#[message.outboundProperties.'trace-id']] Getting team with tag: [#[message.inboundProperties.'http.uri.params'.tag]]" level="INFO" doc:name="Log the tag of the team we're getting information on"/>
         <db:select config-ref="MySQL_Configuration" doc:name="Retrieve team by tag">
             <db:parameterized-query><![CDATA[SELECT * FROM teams WHERE tag=#[message.inboundProperties.'http.uri.params'.tag];]]></db:parameterized-query>
         </db:select>
@@ -70,7 +70,7 @@ payload[0]]]></dw:set-payload>
 payload]]></dw:set-payload>
         </dw:transform-message>
         <foreach doc:name="Iterate through each team">
-            <logger message="Inserting the team: [#[payload['tag']]]" level="INFO" doc:name="Log the name of the team you're inserting"/>
+            <logger message="CALL ID [#[message.outboundProperties.'trace-id']] Inserting the team: [#[payload['tag']]]" level="INFO" doc:name="Log the name of the team you're inserting"/>
             <db:insert config-ref="MySQL_Configuration" doc:name="Insert each team T into DB">
                 <db:parameterized-query><![CDATA[INSERT INTO teams(team,tag,region,wins,losses) VALUES(#[payload['team']],#[payload['tag']],#[payload['region']],#[payload['wins']],#[payload['losses']]);]]></db:parameterized-query>
             </db:insert>
