@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:mock="http://www.mulesoft.org/schema/mule/mock" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/mock http://www.mulesoft.org/schema/mule/mock/current/mule-mock.xsd">
+    <munit:config name="munit" doc:name="MUnit configuration" mock-connectors="false" mock-inbounds="false"/>
+    <spring:beans>
+        <spring:import resource="classpath:player-impl.xml"/>
+        <spring:import resource="classpath:global.xml"/>
+        <spring:import resource="classpath:lcstracker-api.xml"/>
+        <spring:import resource="classpath:team-impl.xml"/>
+    </spring:beans>
+    <munit:test name="teams_putTeam_subFlowTest" description="Test">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock update call">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Update team with payload information']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[]"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock retrieve call">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Retrieve now-updated team information']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="{'tag':'TSM','team':'Team Solo Mid','region':'NA','wins':11,'losses':8}"/>
+        </mock:when>
+        <munit:set payload="#[]" doc:name="Set uri params">
+            <munit:inbound-properties>
+                <munit:inbound-property key="http.uri.params" value="#[['tag': 'tsm']]"/>
+            </munit:inbound-properties>
+        </munit:set>
+        <flow-ref name="teams_putTeam_subFlow" doc:name="Call putTeam subflow"/>
+        <munit:assert-on-equals message="Output value different from returned value." expectedValue="{'tag':'TSM','team':'Team Solo Mid','region':'NA','wins':11,'losses':8}" actualValue="#[payload]" doc:name="Assert Equals"/>
+    </munit:test>
+    <munit:test name="teams_deleteTeam_subFlowTest" description="Test">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock deleteTeam call">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Delete team of given tag']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[]"/>
+        </mock:when>
+        <munit:set payload="#['']" doc:name="Set uri params">
+            <munit:inbound-properties>
+                <munit:inbound-property key="http.uri.params" value="#[['tag': 'tsm']]"/>
+            </munit:inbound-properties>
+        </munit:set>
+        <flow-ref name="teams_deleteTeam_subFlow" doc:name="Call deleteTeam subFlow"/>
+        <munit:assert-on-equals expectedValue="#[&quot;&quot;]" actualValue="#[payload]" doc:name="Assert Equals"/>
+    </munit:test>
+    <munit:test name="teams_getTeamsByRegion_subFlowTest" description="Test">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock getTeamsByRegion db call">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['region']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="[{'team':'G2','wins':300}]"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock second db call">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['noRegion']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[]"/>
+        </mock:when>
+        <munit:set payload="#['']" doc:name="Set uri params">
+            <munit:inbound-properties>
+                <munit:inbound-property key="http.uri.params" value="#[['tag': 'tsm']]"/>
+                <munit:inbound-property key="http.query.params" value="#[['region','NA']]"/>
+            </munit:inbound-properties>
+        </munit:set>
+        <flow-ref name="teams_getTeamsByRegion_subFlow" doc:name="Call getTeamsByRegion subFlow"/>
+        <munit:assert-on-equals expectedValue="[{'team':'G2','wins':300}]" actualValue="#[payload]" doc:name="Assert Equals"/>
+    </munit:test>
+    <munit:test name="teams_getTeamByTag_subFlowTest" description="Test">
+        <mock:when doc:name="Mock getTeamsByTag" messageProcessor=".*:.*">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Retrieve team by tag']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="{'team':'Team Solo Mid','tag':'tsm','region':'NA','wins':10,'losses':5}"/>
+        </mock:when>
+        <munit:set payload="#[]" doc:name="Set URI Params">
+            <munit:inbound-properties>
+                <munit:inbound-property key="http.uri.params" value="#[['tag':'tsm']]"/>
+            </munit:inbound-properties>
+        </munit:set>
+        <flow-ref name="teams_getTeamByTag_subFlow" doc:name="Call getTeamsByTag subFlow"/>
+        <munit:assert-on-equals expectedValue="{'team':'Team Solo Mid','tag':'tsm','region':'NA','wins':10,'losses':5}" actualValue="#[payload]" doc:name="Assert Equals"/>
+    </munit:test>
+    <munit:test name="teams_postTeams_subFlowTest" description="Test">
+        <mock:when doc:name="Mock postTeams db call" messageProcessor=".*:.*">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Insert each team T into DB']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="[{'team':'Team Solo Mid','tag':'tsm','region':'NA','wins':10,'losses':5}]"/>
+        </mock:when>
+        <set-payload value="#[[{'team':'Team Solo Mid','tag':'tsm','region':'NA','wins':10,'losses':5}]]" doc:name="Set Payload"/>
+        <flow-ref name="teams_postTeams_subFlow" doc:name="Flow-ref to teams_postTeams_subFlow"/>
+        <munit:assert-on-equals expectedValue="#[[{'team':'Team Solo Mid','tag':'tsm','region':'NA','wins':10,'losses':5}]]" actualValue="#[payload]" doc:name="Assert Equals"/>
+    </munit:test>
+</mule>

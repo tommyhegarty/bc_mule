@@ -27,8 +27,23 @@ http://www.mulesoft.org/schema/mule/mock http://www.mulesoft.org/schema/mule/moc
             <munit:inbound-property key="http.uri.params" value="#[['ign': 'zven']]"/>
         </munit:inbound-properties>
  		</munit:set>
-        <logger message="Message is as follows: [#[message]]" level="INFO" category="com.ms3.lcstracker.test" doc:name="Logger"/>
         <flow-ref name="players_getPlayerByIgn_subFlow" doc:name="Mock a call to get player by IGN"/>
         <munit:assert-on-equals message="The output failed to match expected." expectedValue="{&quot;ign&quot;:&quot;zven&quot;,&quot;team&quot;:&quot;tsm&quot;,&quot;role&quot;:&quot;adc&quot;}" actualValue="#[payload]" doc:name="Check that the name we got is Zven"/>
+    </munit:test>
+    <munit:test name="players_getPlayersByRole_subFlowTest" description="test">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock database call">
+            <mock:with-attributes>
+                <mock:with-attribute name="name" whereValue="#[matchContains('players_getPlayersByRole_subFlow')]"/>
+            </mock:with-attributes>
+            <mock:then-return payload="[{&quot;ign&quot;:&quot;zven&quot;,&quot;team&quot;:&quot;tsm&quot;,&quot;role&quot;:&quot;adc&quot;}]"/>
+        </mock:when>
+        <munit:set payload="#['']" doc:name="Set uri params">
+            <munit:inbound-properties>
+                <munit:inbound-property key="http.uri.params" value="#[['ign': 'zven']]"/>
+                <munit:inbound-property key="http.query.params" value="#[['role':'adc']]"/>
+            </munit:inbound-properties>
+        </munit:set>
+        <flow-ref name="players_getPlayersByRole_subFlow" doc:name="Flow Reference"/>
+        <munit:assert-on-equals message="Output was not the mocked db output." expectedValue="[{&quot;ign&quot;:&quot;zven&quot;,&quot;team&quot;:&quot;tsm&quot;,&quot;role&quot;:&quot;adc&quot;}]" actualValue="#[payload]" doc:name="Assert Equals"/>
     </munit:test>
 </mule>
